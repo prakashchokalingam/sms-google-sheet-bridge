@@ -60,9 +60,11 @@ fun HomeScreen(
 
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
+        vm.refresh()
         while (true) {
             delay(30_000)
             now = System.currentTimeMillis()
+            vm.refresh()
         }
     }
 
