@@ -12,11 +12,13 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dev.hark.smsbridge.HarkApp
+import dev.hark.smsbridge.core.IstTime
 import dev.hark.smsbridge.data.BatchRecord
 import dev.hark.smsbridge.data.Counts
 import dev.hark.smsbridge.data.Prefs
 import dev.hark.smsbridge.data.RuleStore
 import dev.hark.smsbridge.data.StoredMessage
+import dev.hark.smsbridge.data.SyncTotals
 import dev.hark.smsbridge.net.UploadResult
 import dev.hark.smsbridge.redact.RedactionRule
 import dev.hark.smsbridge.redact.SensitivityMode
@@ -45,6 +47,7 @@ data class UiState(
     val lastUploadAt: Long = 0L,
     val lastError: String? = null,
     val counts: Counts = Counts(0, 0, 0, 0, 0),
+    val today: SyncTotals = SyncTotals(0, 0, 0, 0),
     val messages: List<StoredMessage> = emptyList(),
     val batches: List<BatchRecord> = emptyList(),
     val rules: List<RedactionRule> = emptyList(),
@@ -314,6 +317,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val c = container
         val application = getApplication<Application>()
         val rules = c.rules.list()
+        val now = System.currentTimeMillis()
         val power = application.getSystemService(Context.POWER_SERVICE) as PowerManager
         return UiState(
             loaded = true,
@@ -334,6 +338,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             lastUploadAt = c.prefs.lastUploadAt,
             lastError = c.prefs.lastError,
             counts = c.messages.counts(),
+            today = c.messages.totalsSince(IstTime.startOfDay(now)),
             messages = c.messages.recentMessages(200),
             batches = c.messages.recentBatches(30),
             rules = rules,

@@ -171,6 +171,25 @@ class MessageStore(private val helper: HarkDb) {
         )
     }
 
+    fun totalsSince(since: Long): SyncTotals {
+        return db.rawQuery(
+            "SELECT COUNT(*), COALESCE(SUM(count), 0), COALESCE(SUM(masked_count), 0), " +
+                "COALESCE(SUM(skipped_otp), 0) FROM batch WHERE status = ? AND sent_at >= ?",
+            arrayOf(STATUS_UPLOADED, since.toString())
+        ).use { cursor ->
+            if (cursor.moveToFirst()) {
+                SyncTotals(
+                    messages = cursor.getInt(1),
+                    masked = cursor.getInt(2),
+                    skipped = cursor.getInt(3),
+                    events = cursor.getInt(0)
+                )
+            } else {
+                SyncTotals(0, 0, 0, 0)
+            }
+        }
+    }
+
     fun recentMessages(limit: Int = 200): List<StoredMessage> {
         return db.rawQuery(
             "SELECT * FROM sms ORDER BY received_at DESC LIMIT ?",

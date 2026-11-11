@@ -3,7 +3,10 @@ package dev.hark.smsbridge.ui
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,57 +14,91 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.hark.smsbridge.core.IstTime
+import dev.hark.smsbridge.data.BatchRecord
 import dev.hark.smsbridge.data.Prefs
 import dev.hark.smsbridge.redact.SensitivityMode
+import kotlinx.coroutines.delay
 
 @Composable
-fun HomeScreen(state: UiState, vm: AppViewModel, onOpenRules: () -> Unit) {
+fun HomeScreen(
+    state: UiState,
+    vm: AppViewModel,
+    onOpenRules: () -> Unit,
+    onOpenMessages: () -> Unit
+) {
     val context = LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { vm.refreshPermissions() }
+
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(30_000)
+            now = System.currentTimeMillis()
+        }
+    }
+
+    var detail by remember { mutableStateOf<BatchRecord?>(null) }
+
+    val lastUploaded = state.batches.firstOrNull { it.status == "UPLOADED" }
+    val nextSync = IstTime.nextWindowStart(now, state.windowMinutes)
 
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            SectionCard("Connection") {
+            SectionCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Sync", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.width(8.dp))
                     Pill(
                         text = if (state.configured) "Connected" else "Not connected",
                         tone = if (state.configured) Tone.GOOD else Tone.BAD
                     )
-                    Spacer(Modifier.weight(1f))
-                    Text(state.deviceName, style = androidx.compose.material3.MaterialTheme.typography.labelMedium)
                 }
-                KeyValue(
-                    "Last upload",
-                    if (state.lastUploadAt == 0L) "Never" else IstTime.human(state.lastUploadAt)
+                Text(
+                    "${state.deviceName} · every ${windowLabel(state.windowMinutes)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                KeyValue("Last", lastSyncLabel(lastUploaded))
+                KeyValue("Next", nextSyncLabel(nextSync, now))
                 KeyValue(
-                    "Next batch",
-                    IstTime.human(IstTime.nextWindowStart(System.currentTimeMillis(), state.windowMinutes))
+                    "Queued",
+                    if (state.counts.pendingMessages == 0) "None" else messageLabel(state.counts.pendingMessages)
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = vm::runNow, modifier = Modifier.weight(1f)) {
-                        Text("Send now")
+                        Text("Sync now")
                     }
                     OutlinedButton(onClick = vm::testSavedConnection, modifier = Modifier.weight(1f)) {
                         Text("Test")
@@ -76,18 +113,39 @@ fun HomeScreen(state: UiState, vm: AppViewModel, onOpenRules: () -> Unit) {
         }
 
         item {
-            SectionCard("Queue") {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    StatTile("Pending", state.counts.pendingMessages.toString(), Modifier.weight(1f))
-                    StatTile("Batches", state.counts.pendingBatches.toString(), Modifier.weight(1f))
-                    StatTile("Masked", state.counts.maskedMessages.toString(), Modifier.weight(1f))
-                    StatTile("Skipped", state.counts.skippedTotal.toString(), Modifier.weight(1f))
+            SectionCard {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Activity", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        todayLabel(state),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-                Text(
-                    "Messages are deleted from this phone after a successful upload.",
-                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
-                )
+
+                if (state.batches.isEmpty()) {
+                    Text(
+                        "Nothing synced yet. Send a test SMS or tap Sync now.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                } else {
+                    state.batches.take(8).forEachIndexed { index, batch ->
+                        if (index > 0) HorizontalDivider()
+                        BatchRow(batch = batch, onClick = { detail = batch })
+                    }
+                    if (state.batches.size > 8) {
+                        Text(
+                            "Showing latest 8 events",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
 
@@ -193,43 +251,203 @@ fun HomeScreen(state: UiState, vm: AppViewModel, onOpenRules: () -> Unit) {
             }
         }
 
-        item {
-            SectionCard("Recent batches") {
-                if (state.batches.isEmpty()) {
-                    Text(
-                        "No batches yet.",
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+        item { Spacer(Modifier.height(8.dp)) }
+    }
+
+    val batch = detail
+    if (batch != null) {
+        BatchDetailDialog(
+            batch = batch,
+            device = state.deviceName,
+            onViewMessages = {
+                detail = null
+                onOpenMessages()
+            },
+            onDismiss = { detail = null }
+        )
+    }
+}
+
+@Composable
+private fun BatchRow(batch: BatchRecord, onClick: () -> Unit) {
+    val failed = batch.status != "UPLOADED" && !batch.lastError.isNullOrBlank()
+    val heartbeat = batch.count == 0
+    val dotColor = when {
+        batch.status == "UPLOADED" && heartbeat ->
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+        batch.status == "UPLOADED" -> MaterialTheme.colorScheme.primary
+        failed -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.tertiary
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            IstTime.clock(batch.windowEnd),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(44.dp)
+        )
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(dotColor, CircleShape)
+        )
+        Spacer(Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                batchSummary(batch),
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (heartbeat) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
                 } else {
-                    state.batches.take(8).forEachIndexed { index, batch ->
-                        if (index > 0) HorizontalDivider()
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "#${batch.seq}  ${IstTime.human(batch.windowStart)}",
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    "${batch.count} messages, ${batch.maskedCount} masked, ${batch.skipped} skipped",
-                                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Pill(
-                                text = batch.status,
-                                tone = if (batch.status == "UPLOADED") Tone.GOOD else Tone.WARN
-                            )
-                        }
-                    }
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+            Text(
+                if (batch.status == "UPLOADED") {
+                    "synced ${IstTime.clock(batch.sentAt ?: batch.windowEnd)}"
+                } else {
+                    "waiting to upload"
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        Pill(
+            text = when {
+                batch.status == "UPLOADED" -> "Synced"
+                failed -> "Failed"
+                else -> "Queued"
+            },
+            tone = when {
+                batch.status == "UPLOADED" -> Tone.GOOD
+                failed -> Tone.BAD
+                else -> Tone.WARN
+            }
+        )
+    }
+}
+
+@Composable
+private fun BatchDetailDialog(
+    batch: BatchRecord,
+    device: String,
+    onViewMessages: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val failed = batch.status != "UPLOADED" && !batch.lastError.isNullOrBlank()
+    val status = when {
+        batch.status == "UPLOADED" -> "Synced"
+        failed -> "Failed"
+        else -> "Queued"
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Sync event #${batch.seq}") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Window",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text("${IstTime.human(batch.windowStart)} - ${IstTime.clock(batch.windowEnd)} IST")
+                KeyValue("Messages", batch.count.toString())
+                KeyValue("Masked", batch.maskedCount.toString())
+                KeyValue("Skipped", batch.skipped.toString())
+                KeyValue("Device", device)
+                KeyValue("Status", status)
+                KeyValue("Uploaded", batch.sentAt?.let { IstTime.human(it) } ?: "Not yet")
+                if (batch.attempts > 1 && batch.status != "UPLOADED") {
+                    KeyValue("Attempts", batch.attempts.toString())
+                }
+                batch.lastError?.takeIf { it.isNotBlank() }?.let {
+                    InfoBanner(it, Tone.BAD)
+                }
+            }
+        },
+        confirmButton = {
+            if (batch.count > 0) {
+                TextButton(onClick = onViewMessages) {
+                    Text("View messages")
+                }
+            } else {
+                TextButton(onClick = onDismiss) {
+                    Text("Close")
+                }
+            }
+        },
+        dismissButton = {
+            if (batch.count > 0) {
+                TextButton(onClick = onDismiss) {
+                    Text("Close")
                 }
             }
         }
+    )
+}
 
-        item { Spacer(Modifier.height(8.dp)) }
+private fun lastSyncLabel(batch: BatchRecord?): String {
+    if (batch == null) return "No sync yet"
+    val time = IstTime.clock(batch.sentAt ?: batch.windowEnd)
+    if (batch.count == 0) return "$time · heartbeat"
+    return buildString {
+        append(time)
+        append(" · ")
+        append(messageLabel(batch.count))
+        if (batch.maskedCount > 0) append(" · ${batch.maskedCount} masked")
+        if (batch.skipped > 0) append(" · ${batch.skipped} skipped")
+    }
+}
+
+private fun todayLabel(state: UiState): String {
+    val today = state.today
+    if (today.events == 0) return "Today · no syncs"
+    return buildString {
+        append("Today · ")
+        append(messageLabel(today.messages))
+        if (today.masked > 0) append(" · ${today.masked} masked")
+        if (today.skipped > 0) append(" · ${today.skipped} skipped")
+    }
+}
+
+private fun batchSummary(batch: BatchRecord): String {
+    if (batch.count == 0) return "0 msgs · heartbeat"
+    return buildString {
+        append(messageLabel(batch.count))
+        if (batch.maskedCount > 0) append(" · ${batch.maskedCount} masked")
+        if (batch.skipped > 0) append(" · ${batch.skipped} skipped")
+    }
+}
+
+private fun messageLabel(count: Int): String {
+    return if (count == 1) "1 msg" else "$count msgs"
+}
+
+private fun nextSyncLabel(nextSync: Long, now: Long): String {
+    val remaining = (nextSync - now).coerceAtLeast(0)
+    val minutes = (remaining + 59_999L) / 60_000L
+    val time = IstTime.clock(nextSync)
+    return when {
+        minutes <= 0L -> "due now ($time)"
+        minutes < 60L -> "in $minutes min ($time)"
+        else -> "in ${minutes / 60L} h ${minutes % 60L} min ($time)"
+    }
+}
+
+private fun windowLabel(minutes: Int): String {
+    return when {
+        minutes < 60 -> "${minutes} min"
+        minutes == 60 -> "1 h"
+        minutes == 1440 -> "24 h"
+        minutes % 60 == 0 -> "${minutes / 60} h"
+        else -> "${minutes} min"
     }
 }

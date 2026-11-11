@@ -33,3 +33,10 @@ data class Counts(
     val skippedTotal: Int,
     val uploadedBatches: Int
 )
+
+data class SyncTotals(
+    val messages: Int,
+    val masked: Int,
+    val skipped: Int,
+    val events: Int
+)

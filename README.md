@@ -290,7 +290,7 @@ Permissions:
 
 UI sections:
 
-- **Home**: connection state, next batch, queue counts, privacy summary, warnings, recent batches
+- **Home**: sync status (last sync, next countdown, queued count), sync activity with per-event counts and a detail dialog, privacy summary, warnings
 - **Messages**: masked messages currently stored on the phone
 - **Rules**: enable/disable, edit, test, add, delete, restore defaults, JSON import/export
 - **Settings**: connection, device, delivery, permissions, backfill, setup guide, notices

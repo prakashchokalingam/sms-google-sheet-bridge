@@ -10,6 +10,7 @@ object IstTime {
     private val zone = ZoneOffset.ofTotalSeconds(OFFSET_SECONDS.toInt())
     private val isoFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX")
     private val humanFormat = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm")
+    private val clockFormat = DateTimeFormatter.ofPattern("HH:mm")
 
     fun floorWindow(epochMillis: Long, minutes: Int): Long {
         val step = minutes.coerceAtLeast(1) * 60_000L
@@ -33,5 +34,13 @@ object IstTime {
 
     fun human(epochMillis: Long): String {
         return humanFormat.format(Instant.ofEpochMilli(epochMillis).atOffset(zone))
+    }
+
+    fun clock(epochMillis: Long): String {
+        return clockFormat.format(Instant.ofEpochMilli(epochMillis).atOffset(zone))
+    }
+
+    fun startOfDay(nowMillis: Long): Long {
+        return floorWindow(nowMillis, 1440)
     }
 }

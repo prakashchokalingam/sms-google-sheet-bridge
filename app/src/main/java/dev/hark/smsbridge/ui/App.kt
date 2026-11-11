@@ -113,7 +113,12 @@ private fun MainScreen(state: UiState, vm: AppViewModel) {
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
             when (tab) {
-                0 -> HomeScreen(state, vm, onOpenRules = { tab = 2 })
+                0 -> HomeScreen(
+                    state,
+                    vm,
+                    onOpenRules = { tab = 2 },
+                    onOpenMessages = { tab = 1 }
+                )
                 1 -> MessagesScreen(state)
                 2 -> RulesScreen(state, vm)
                 else -> SettingsScreen(state, vm)
