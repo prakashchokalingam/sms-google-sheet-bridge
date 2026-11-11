@@ -6,6 +6,15 @@ The app is self-hosted: you run the Android app, you own the Google Sheet, and y
 
 > Status: side-load / personal-use project. Not published on Google Play. Read [Limitations](#limitations) before relying on it.
 
+## Download
+
+[Download the latest APK](https://github.com/prakashchokalingam/sms-google-sheet-bridge/releases/latest/download/hark-sms-bridge.apk) · [All releases](https://github.com/prakashchokalingam/sms-google-sheet-bridge/releases)
+
+- Version 0.1.0; Android 8.0 (API 26) or newer.
+- SHA-256: `1367f71906ca053e0da04b79b44bb8548089d58249fea7c14ad4e154b68b63c9`
+- Side-load only. Play Protect may warn because the app is not distributed through Google Play.
+- The APK contains no deployment URL or shared secret. You still deploy your own Apps Script endpoint and enter both values in the app.
+
 <p align="center">
   <img src="docs/screenshots/onboarding.png" width="220" alt="Onboarding" />
   <img src="docs/screenshots/home.png" width="220" alt="Home" />
@@ -18,6 +27,7 @@ The app is self-hosted: you run the Android app, you own the Google Sheet, and y
 
 ## Contents
 
+- [Download](#download)
 - [How it works](#how-it-works)
 - [Redaction model](#redaction-model)
 - [Batching and delivery](#batching-and-delivery)
@@ -32,6 +42,7 @@ The app is self-hosted: you run the Android app, you own the Google Sheet, and y
 - [Troubleshooting](#troubleshooting)
 - [Repository layout](#repository-layout)
 - [Limitations](#limitations)
+- [License](#license)
 
 ## How it works
 
@@ -233,6 +244,20 @@ Or open the folder in Android Studio, let it install missing SDK components, and
 
 The debug APK is at `app/build/outputs/apk/debug/app-debug.apk`.
 
+### Release build
+
+Release signing is read from environment variables and skipped when none are set:
+
+```bash
+export HARK_KEYSTORE=/absolute/path/to/release.jks
+export HARK_KEYSTORE_PASSWORD=...
+export HARK_KEY_ALIAS=hark
+export HARK_KEY_PASSWORD=...
+./gradlew :app:assembleRelease
+```
+
+Keep the keystore and passwords outside this repository. The signed APK is written to `app/build/outputs/apk/release/app-release.apk`.
+
 ## Google Apps Script setup
 
 The endpoint source lives in [`apps-script/Code.gs`](apps-script/Code.gs) and is also bundled in the APK at `app/src/main/assets/apps-script/Code.gs`.
@@ -402,10 +427,10 @@ No secrets are committed. Runtime values live in shared preferences and Android 
 - Windows are IST-only, on purpose.
 - One spreadsheet per phone is assumed.
 - The public Apps Script endpoint can be spammed; rejected requests still consume quota.
-- No release signing configuration is included.
+- Signing keys are not included; release builds require your own keystore.
 - Google Sheets, Drive, and Apps Script are third-party services with their own terms and limits.
 - Use only for messages you are allowed to forward.
 
 ## License
 
-No license has been chosen yet. Until one is added, the code is all rights reserved by the author. If you intend to accept contributions or allow reuse, add a license such as MIT or Apache-2.0.
+MIT. See [LICENSE](LICENSE).

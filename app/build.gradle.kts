@@ -3,6 +3,19 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+val releaseKeystore = System.getenv("HARK_KEYSTORE")
+val releaseKeystorePassword = System.getenv("HARK_KEYSTORE_PASSWORD")
+val releaseKeyAlias = System.getenv("HARK_KEY_ALIAS")
+val releaseKeyPassword = System.getenv("HARK_KEY_PASSWORD")
+val releaseSigningValues =
+    listOf(releaseKeystore, releaseKeystorePassword, releaseKeyAlias, releaseKeyPassword)
+val releaseSigningReady = releaseSigningValues.all { !it.isNullOrBlank() }
+if (!releaseSigningReady && releaseSigningValues.any { !it.isNullOrBlank() }) {
+    throw GradleException(
+        "Set all of HARK_KEYSTORE, HARK_KEYSTORE_PASSWORD, HARK_KEY_ALIAS, and HARK_KEY_PASSWORD, or none"
+    )
+}
+
 android {
     namespace = "dev.hark.smsbridge"
     compileSdk = 37
@@ -15,9 +28,21 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        if (releaseSigningReady) {
+            create("release") {
+                storeFile = file(releaseKeystore!!)
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
