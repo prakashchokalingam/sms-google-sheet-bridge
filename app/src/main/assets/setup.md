@@ -1,4 +1,4 @@
-Hark SMS Bridge - setup
+SMS Google Sheet Bridge - setup
 
 1. Open script.google.com and create a new project.
 2. Replace Code.gs with the file from apps-script/Code.gs.
@@ -10,7 +10,7 @@ Hark SMS Bridge - setup
    Who has access: Anyone.
 6. Copy the Web app URL. It must end with /exec.
    It looks like https://script.google.com/macros/s/XXXX/exec
-7. In Hark, open Settings, paste the URL and the shared secret.
+7. In SMS Google Sheet Bridge, open Settings, paste the URL and the shared secret.
    The secret is at least 32 characters.
 8. Tap Save and test. A green notice means the sheet is reachable.
 

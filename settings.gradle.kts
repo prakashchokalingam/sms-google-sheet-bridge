@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "HarkSmsBridge"
+rootProject.name = "SmsGoogleSheetBridge"
 include(":app")

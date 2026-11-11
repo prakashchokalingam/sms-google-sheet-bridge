@@ -3,29 +3,29 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val releaseKeystore = System.getenv("HARK_KEYSTORE")
-val releaseKeystorePassword = System.getenv("HARK_KEYSTORE_PASSWORD")
-val releaseKeyAlias = System.getenv("HARK_KEY_ALIAS")
-val releaseKeyPassword = System.getenv("HARK_KEY_PASSWORD")
+val releaseKeystore = System.getenv("SMS_SHEET_KEYSTORE")
+val releaseKeystorePassword = System.getenv("SMS_SHEET_KEYSTORE_PASSWORD")
+val releaseKeyAlias = System.getenv("SMS_SHEET_KEY_ALIAS")
+val releaseKeyPassword = System.getenv("SMS_SHEET_KEY_PASSWORD")
 val releaseSigningValues =
     listOf(releaseKeystore, releaseKeystorePassword, releaseKeyAlias, releaseKeyPassword)
 val releaseSigningReady = releaseSigningValues.all { !it.isNullOrBlank() }
 if (!releaseSigningReady && releaseSigningValues.any { !it.isNullOrBlank() }) {
     throw GradleException(
-        "Set all of HARK_KEYSTORE, HARK_KEYSTORE_PASSWORD, HARK_KEY_ALIAS, and HARK_KEY_PASSWORD, or none"
+        "Set all of SMS_SHEET_KEYSTORE, SMS_SHEET_KEYSTORE_PASSWORD, SMS_SHEET_KEY_ALIAS, and SMS_SHEET_KEY_PASSWORD, or none"
     )
 }
 
 android {
-    namespace = "dev.hark.smsbridge"
+    namespace = "io.github.prakashchokalingam.smsgooglesheetbridge"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "dev.hark.smsbridge"
+        applicationId = "io.github.prakashchokalingam.smsgooglesheetbridge"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
     }
 
     signingConfigs {

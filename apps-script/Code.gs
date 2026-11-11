@@ -16,7 +16,7 @@ function setup() {
   }
   let id = props.getProperty('SPREADSHEET_ID');
   if (!id) {
-    const ss = SpreadsheetApp.create('Hark SMS Bridge');
+    const ss = SpreadsheetApp.create('SMS Google Sheet Bridge');
     id = ss.getId();
     props.setProperty('SPREADSHEET_ID', id);
     ensureSheet(ss);
@@ -28,7 +28,7 @@ function setup() {
 }
 
 function doGet() {
-  return jsonOut({ ok: true, service: 'hark-sms-bridge', version: 1 });
+  return jsonOut({ ok: true, service: 'sms-google-sheet-bridge', version: 1 });
 }
 
 function doPost(e) {

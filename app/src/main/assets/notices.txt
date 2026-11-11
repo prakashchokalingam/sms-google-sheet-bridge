@@ -1,6 +1,6 @@
 Notices
 
-Hark SMS Bridge reads incoming SMS on this phone, masks codes, and uploads
+SMS Google Sheet Bridge reads incoming SMS on this phone, masks codes, and uploads
 batches to a Google Sheet that you control.
 
 Third-party services
@@ -17,5 +17,5 @@ What is stored
 What to expect
 - Redaction reduces risk. It cannot guarantee that every secret is removed.
 - Review your rules and test samples before you rely on them.
-- Do not use Hark for messages you are not allowed to forward.
+- Do not use SMS Google Sheet Bridge for messages you are not allowed to forward.
 - Keep the Web app URL and the shared secret private.

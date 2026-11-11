@@ -8,12 +8,13 @@ The app is self-hosted: you run the Android app, you own the Google Sheet, and y
 
 ## Download
 
-[Download the latest APK](https://github.com/prakashchokalingam/sms-google-sheet-bridge/releases/latest/download/hark-sms-bridge.apk) · [All releases](https://github.com/prakashchokalingam/sms-google-sheet-bridge/releases)
+[Download the latest APK](https://github.com/prakashchokalingam/sms-google-sheet-bridge/releases/latest/download/sms-google-sheet-bridge.apk) · [All releases](https://github.com/prakashchokalingam/sms-google-sheet-bridge/releases)
 
-- Version 0.1.0; Android 8.0 (API 26) or newer.
-- SHA-256: `1367f71906ca053e0da04b79b44bb8548089d58249fea7c14ad4e154b68b63c9`
+- Version 0.1.1; Android 8.0 (API 26) or newer.
+- SHA-256: `f32f3e0f2f55b72c6d7b1701340784d8c1f1efd2e30f1eb3f6e8f9ff73502c65`
 - Side-load only. Play Protect may warn because the app is not distributed through Google Play.
 - The APK contains no deployment URL or shared secret. You still deploy your own Apps Script endpoint and enter both values in the app.
+- v0.1.1 uses a new application ID. If you installed v0.1.0, uninstall it first; local settings and history do not migrate.
 
 <p align="center">
   <img src="docs/screenshots/onboarding.png" width="220" alt="Onboarding" />
@@ -176,7 +177,7 @@ window = 15 minutes
 
 ## Security model
 
-- The shared secret is at least 32 characters and is stored with Android Keystore AES/GCM (`hark.secret.v1`).
+- The shared secret is at least 32 characters and is stored with Android Keystore AES/GCM (`sms_sheet.secret.v1`).
 - The Web App URL must match `^https://script\.google\.com/macros/s/[A-Za-z0-9_-]+/exec$`.
 - Apps Script `doPost(e)` cannot read custom HTTP headers, so the request is a signed JSON envelope:
 
@@ -249,10 +250,10 @@ The debug APK is at `app/build/outputs/apk/debug/app-debug.apk`.
 Release signing is read from environment variables and skipped when none are set:
 
 ```bash
-export HARK_KEYSTORE=/absolute/path/to/release.jks
-export HARK_KEYSTORE_PASSWORD=...
-export HARK_KEY_ALIAS=hark
-export HARK_KEY_PASSWORD=...
+export SMS_SHEET_KEYSTORE=/absolute/path/to/release.jks
+export SMS_SHEET_KEYSTORE_PASSWORD=...
+export SMS_SHEET_KEY_ALIAS=sms-google-sheet-bridge
+export SMS_SHEET_KEY_PASSWORD=...
 ./gradlew :app:assembleRelease
 ```
 
@@ -268,7 +269,7 @@ The endpoint source lives in [`apps-script/Code.gs`](apps-script/Code.gs) and is
 4. Run the `setup` function once and approve the requested permissions.
 5. Open the execution log. It prints:
    - `Shared secret:` a generated 64-character secret
-   - `Spreadsheet:` the URL of the created sheet `Hark SMS Bridge`
+   - `Spreadsheet:` the URL of the created sheet `SMS Google Sheet Bridge`
 6. Deploy: **Deploy -> New deployment -> Web app**
    - Execute as: **Me**
    - Who has access: **Anyone**
@@ -403,7 +404,7 @@ Expected: the first message appears masked on the Messages tab; the second is sk
 
 ```
 app/                         Android app (Kotlin, Compose)
-  src/main/java/dev/hark/smsbridge/
+  src/main/java/io/github/prakashchokalingam/smsgooglesheetbridge/
     core/                    time windows, SHA-256/HMAC
     data/                    SQLite, prefs, Keystore secret, rules
     net/                     payload builder, signed uploader
