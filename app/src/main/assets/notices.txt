@@ -1,0 +1,21 @@
+Notices
+
+Hark SMS Bridge reads incoming SMS on this phone, masks codes, and uploads
+batches to a Google Sheet that you control.
+
+Third-party services
+- Google Sheets, Google Drive, and Apps Script are services of Google.
+- Messages travel over the network to your Google account.
+- Your carrier may charge for data.
+
+What is stored
+- Skipped messages are never stored on the phone and never uploaded.
+- Masked messages are stored on the phone with [REDACTED] in place of codes.
+- The phone deletes each batch after a successful upload.
+- Your Google Sheet keeps the uploaded rows until you delete them.
+
+What to expect
+- Redaction reduces risk. It cannot guarantee that every secret is removed.
+- Review your rules and test samples before you rely on them.
+- Do not use Hark for messages you are not allowed to forward.
+- Keep the Web app URL and the shared secret private.

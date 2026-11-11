@@ -1,0 +1,36 @@
+# Gradle / Kotlin
+.gradle/
+.kotlin/
+build/
+app/build/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local SDK path (machine specific)
+local.properties
+
+# Signing material
+*.jks
+*.keystore
+*.p12
+keystore.properties
+
+# Build outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Local tooling
+.claude/
