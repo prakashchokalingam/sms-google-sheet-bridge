@@ -190,7 +190,7 @@ function toInt(value) {
 }
 
 function hmacHex(secret, message) {
-  const bytes = Utilities.computeHmacSha256Signature(message, secret);
+  const bytes = Utilities.computeHmacSha256Signature(message, secret, Utilities.Charset.UTF_8);
   const out = [];
   for (let i = 0; i < bytes.length; i++) {
     const value = bytes[i] < 0 ? bytes[i] + 256 : bytes[i];
