@@ -298,11 +298,11 @@ Keep the keystore and passwords outside this repository. The signed APK is writt
 
 ## Google Apps Script setup
 
-The endpoint source lives in [`apps-script/Code.gs`](apps-script/Code.gs) and is also bundled in the APK at `app/src/main/assets/apps-script/Code.gs`.
+The endpoint source lives in [`apps-script/Code.gs`](https://github.com/prakashchokalingam/sms-google-sheet-bridge/blob/main/apps-script/Code.gs) and is also bundled in the APK at [`app/src/main/assets/apps-script/Code.gs`](https://github.com/prakashchokalingam/sms-google-sheet-bridge/blob/main/app/src/main/assets/apps-script/Code.gs).
 
 1. Open <https://script.google.com> and create a new project.
-2. Replace the default `Code.gs` contents with `apps-script/Code.gs`.
-3. Project Settings -> enable **Show "appsscript.json"** and replace it with `apps-script/appsscript.json`.
+2. Replace the default `Code.gs` contents with [`apps-script/Code.gs`](https://github.com/prakashchokalingam/sms-google-sheet-bridge/blob/main/apps-script/Code.gs) ([raw](https://raw.githubusercontent.com/prakashchokalingam/sms-google-sheet-bridge/main/apps-script/Code.gs)).
+3. Project Settings -> enable **Show "appsscript.json"** and replace it with [`apps-script/appsscript.json`](https://github.com/prakashchokalingam/sms-google-sheet-bridge/blob/main/apps-script/appsscript.json) ([raw](https://raw.githubusercontent.com/prakashchokalingam/sms-google-sheet-bridge/main/apps-script/appsscript.json)).
 4. Run the `setup` function once and approve the requested permissions.
 5. Open the execution log. It prints:
    - `Shared secret:` a generated 64-character secret
