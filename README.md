@@ -12,13 +12,15 @@ The app is self-hosted: you run the Android app, you own the Google Sheet, and y
 
 - Version 0.1.1; Android 8.0 (API 26) or newer.
 - SHA-256: `f32f3e0f2f55b72c6d7b1701340784d8c1f1efd2e30f1eb3f6e8f9ff73502c65`
-- Side-load only. Google Play Protect can block installation because the app requests SMS permissions. See [Installing past Play Protect](#installing-past-play-protect).
+- Side-load only. Google Play Protect can block installation because the app requests SMS permissions. See [Installing past Play Protect](#installing-past-play-protect) or the [wiki install guide](https://github.com/prakashchokalingam/sms-google-sheet-bridge/wiki/Installing-on-Android) for the ADB, Shizuku + Obtainium, and troubleshooting routes.
 - The APK contains no deployment URL or shared secret. You still deploy your own Apps Script endpoint and enter both values in the app.
 - v0.1.1 uses a new application ID. If you installed v0.1.0, uninstall it first; local settings and history do not migrate.
 
 ## Installing past Play Protect
 
 Google Play Protect's enhanced fraud protection blocks apps installed from a browser, messaging app, or file manager when the APK requests SMS access. In affected markets the dialog says **App blocked to protect your device** and has only an **OK** button. Allowing **Install unknown apps** does not bypass it.
+
+The [wiki install guide](https://github.com/prakashchokalingam/sms-google-sheet-bridge/wiki/Installing-on-Android) covers the no-PC Shizuku + Obtainium/InstallerX route, Play Protect appeal details, updates, and troubleshooting. This README keeps the short version.
 
 Do **not** use a debuggable APK to work around this. Developer options and USB debugging are device settings; the APK should stay a normal signed release build. A debuggable build does not avoid the check and exposes app data and debugging interfaces.
 
@@ -63,6 +65,7 @@ The `v0.1.1` release is the only supported download.
 
 - [Download](#download)
 - [Installing past Play Protect](#installing-past-play-protect)
+- [Wiki: Installing on Android](https://github.com/prakashchokalingam/sms-google-sheet-bridge/wiki/Installing-on-Android)
 - [How it works](#how-it-works)
 - [Redaction model](#redaction-model)
 - [Batching and delivery](#batching-and-delivery)
