@@ -12,9 +12,42 @@ The app is self-hosted: you run the Android app, you own the Google Sheet, and y
 
 - Version 0.1.1; Android 8.0 (API 26) or newer.
 - SHA-256: `f32f3e0f2f55b72c6d7b1701340784d8c1f1efd2e30f1eb3f6e8f9ff73502c65`
-- Side-load only. Play Protect may warn because the app is not distributed through Google Play.
+- Side-load only. Google Play Protect can block installation because the app requests SMS permissions. See [Installing past Play Protect](#installing-past-play-protect).
 - The APK contains no deployment URL or shared secret. You still deploy your own Apps Script endpoint and enter both values in the app.
 - v0.1.1 uses a new application ID. If you installed v0.1.0, uninstall it first; local settings and history do not migrate.
+
+## Installing past Play Protect
+
+Google Play Protect's enhanced fraud protection blocks apps installed from a browser, messaging app, or file manager when the APK requests SMS access. In affected markets the dialog says **App blocked to protect your device** and has only an **OK** button. Allowing **Install unknown apps** does not bypass it.
+
+Do **not** use a debuggable APK to work around this. Developer options and USB debugging are device settings; the APK should stay a normal signed release build. A debuggable build does not avoid the check and exposes app data and debugging interfaces.
+
+### Install with adb (recommended)
+
+adb installs do not use the browser/file-manager check. Play Protect stays enabled.
+
+1. Enable **Developer options -> USB debugging** on the phone and connect it.
+2. Verify the download, then install:
+
+```bash
+shasum -a 256 sms-google-sheet-bridge.apk
+adb install -r sms-google-sheet-bridge.apk
+```
+
+3. Android may mark SMS access as restricted for sideloaded apps. Open **Settings -> Apps -> SMS Google Sheet Bridge -> three-dot menu -> Allow restricted settings**, then grant SMS access in the app.
+
+### Install without adb
+
+This temporarily turns off scanning for every app you install.
+
+1. Open **Play Store -> profile -> Play Protect -> gear**.
+2. Turn off **Scan apps with Play Protect**.
+3. Install the APK from **Files**.
+4. Turn **Scan apps with Play Protect** back on.
+
+Future updates may need the same workaround. A Google Play Store listing is not available because Play restricts SMS permissions to default SMS handlers and a few narrow exemptions.
+
+The `v0.1.1` release is the only supported download.
 
 <p align="center">
   <img src="docs/screenshots/onboarding.png" width="220" alt="Onboarding" />
@@ -29,6 +62,7 @@ The app is self-hosted: you run the Android app, you own the Google Sheet, and y
 ## Contents
 
 - [Download](#download)
+- [Installing past Play Protect](#installing-past-play-protect)
 - [How it works](#how-it-works)
 - [Redaction model](#redaction-model)
 - [Batching and delivery](#batching-and-delivery)
@@ -243,7 +277,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 Or open the folder in Android Studio, let it install missing SDK components, and run the `app` configuration.
 
-The debug APK is at `app/build/outputs/apk/debug/app-debug.apk`.
+The debug APK is at `app/build/outputs/apk/debug/app-debug.apk`. It is debuggable and intended for local development only. Distribute the signed release APK, not the debug APK.
 
 ### Release build
 
@@ -287,7 +321,7 @@ https://script.google.com/macros/s/DEPLOYMENT_ID/exec
 
 The `setup` function creates the spreadsheet, writes the header row, and stores `SECRET` and `SPREADSHEET_ID` in Script Properties. Re-running it does not rotate an existing secret.
 
-Use a throwaway Google account and a test sheet for the first run. Use **one spreadsheet per phone**: batch `seq` starts at 1 on each phone.
+Use a throwaway Google account and a test sheet for the first run. Use **one spreadsheet per phone**: batch `seq` starts at 1 on each phone. For v0.1.1, create a new Apps Script project or clear `SPREADSHEET_ID` before running `setup`. Do not reuse a sheet that already contains batch rows from v0.1.0: the server treats a repeated `seq` as an uploaded batch and will not write the new rows.
 
 The server never asks for the secret in the URL. Do not paste it into issues, screenshots, or commits.
 
